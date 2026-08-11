@@ -1861,8 +1861,22 @@
   }
 
   function updateElementReveal(){
-    if(totalPicks < REVEAL_THRESHOLD){
+    if(totalPicks === 0){
       elementReveal.classList.remove('show');
+      return;
+    }
+
+    if(totalPicks < REVEAL_THRESHOLD){
+      const toBasic = REVEAL_THRESHOLD - totalPicks;
+      const toFull = SIGN_THRESHOLD - totalPicks;
+      elementReveal.innerHTML = `
+        <div class="er-title">🔮 Reading your picks...</div>
+        <div class="er-blurb">
+          ${toBasic} more pick${toBasic===1?'':'s'} to your basic profile<br>
+          ${toFull} more picks to your full astrological profile
+        </div>
+      `;
+      elementReveal.classList.add('show');
       return;
     }
 
