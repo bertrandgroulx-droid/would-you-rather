@@ -367,6 +367,26 @@
     text-align:center;
     z-index:1;
   }
+  .reset-btn{
+    font-family:inherit;
+    font-size:.72rem;
+    font-weight:600;
+    color:var(--muted);
+    background:transparent;
+    border:1px solid var(--card-border);
+    border-radius:999px;
+    padding:6px 14px;
+    margin-top:10px;
+    cursor:pointer;
+    transition:color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .reset-btn:hover,
+  .reset-btn:focus-visible{
+    color:var(--accent);
+    border-color:var(--accent);
+    background:rgba(255,180,84,.08);
+    outline:none;
+  }
 </style>
 </head>
 <body>
@@ -401,7 +421,10 @@
   <div class="element-reveal" id="elementReveal"></div>
 </main>
 
-<footer>Self-contained, no build step, no server.</footer>
+<footer>
+  Self-contained, no build step, no server.<br>
+  <button class="reset-btn" id="startOverBtn">↺ Start Over</button>
+</footer>
 
 <script>
 (function(){
@@ -1986,6 +2009,26 @@
   });
   nextBtn.addEventListener('click', ()=>{
     if(cursor<history.length-1){ cursor++; render(history[cursor]); }
+  });
+
+  const startOverBtn = document.getElementById('startOverBtn');
+  startOverBtn.addEventListener('click', ()=>{
+    history.length = 0;
+    cursor = -1;
+    seenItems.clear();
+    lastPickedKey = null;
+    Object.keys(signScore).forEach(k=>{ signScore[k] = 0; });
+    totalPicks = 0;
+
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+    dilemmaEl.innerHTML = '<div class="placeholder">Your first impossible choice is one press away.</div>';
+    themeChip.classList.remove('show');
+    themeChip.textContent = '';
+    historyNav.classList.remove('show');
+    historyPos.textContent = '';
+    elementReveal.classList.remove('show');
+    elementReveal.innerHTML = '';
   });
 
   voiceToggle.addEventListener('click', ()=>{
