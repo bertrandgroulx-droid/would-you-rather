@@ -295,6 +295,44 @@
   .history-nav button:disabled{opacity:.35;cursor:default;}
   .history-nav .pos{font-size:.85rem;color:var(--muted);}
 
+  .element-reveal{
+    margin-top:16px;
+    padding:14px 18px;
+    border-radius:16px;
+    background:var(--card);
+    border:1px solid var(--card-border);
+    box-shadow:var(--shadow);
+    text-align:center;
+    opacity:0;
+    max-height:0;
+    overflow:hidden;
+    transition:opacity .4s ease, max-height .4s ease, margin-top .4s ease;
+  }
+  .element-reveal.show{
+    opacity:1;
+    max-height:200px;
+    margin-top:16px;
+  }
+  .element-reveal .er-title{
+    font-size:.95rem;
+    font-weight:700;
+    color:var(--accent);
+    margin-bottom:4px;
+  }
+  .element-reveal .er-blurb{
+    font-size:.82rem;
+    color:var(--muted);
+    line-height:1.4;
+  }
+  .element-reveal .er-bars{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:8px;
+    font-size:.78rem;
+    color:var(--muted);
+  }
+
   footer{
     margin-top:16px;
     font-size:.68rem;
@@ -334,6 +372,7 @@
     <span class="pos" id="historyPos"></span>
     <button id="nextBtn" title="Next dilemma">▶</button>
   </div>
+  <div class="element-reveal" id="elementReveal"></div>
 </main>
 
 <footer>Self-contained, no build step, no server.</footer>
@@ -1655,6 +1694,26 @@
   let voiceOn = false;
   let chosenVoiceName = localStorage.getItem('wyr-voice') || '';
 
+  // Just-for-fun flavor text, not a real astrological reading — each theme
+  // leans toward one of the four classical elements, and your picks tally
+  // up into a lighthearted "element" reveal once you've made a few.
+  const THEME_ELEMENT = {
+    powers:'fire', fantasy:'fire', transport:'fire', jobs:'fire',
+    kitchen:'earth', animals:'earth', senses:'earth', objects:'earth',
+    weather:'air', space:'air', time:'air', music:'air',
+    emotions:'water', seasons:'water', size:'water',
+  };
+  const ELEMENTS = {
+    fire:{ emoji:'🔥', label:'Fire', blurb:'Bold and quick to leap — you go for the dramatic choice.' },
+    earth:{ emoji:'🌱', label:'Earth', blurb:'Grounded and steady — drawn to comfort and the tangible.' },
+    air:{ emoji:'💨', label:'Air', blurb:'Curious and quick-thinking — pulled toward ideas and open sky.' },
+    water:{ emoji:'🌊', label:'Water', blurb:'Intuitive and feeling-first — you follow the mood of a choice.' },
+  };
+  const REVEAL_THRESHOLD = 5;
+  const elementScore = { fire:0, earth:0, air:0, water:0 };
+  let totalPicks = 0;
+  const elementReveal = document.getElementById('elementReveal');
+
   // Every item shown this session, in EITHER field A or field B (cleared on
   // page reload) — an item counts as used no matter which side it appeared
   // on, so the same line never resurfaces in a different pairing either.
@@ -1754,6 +1813,30 @@
     if(entry.picked) return; // one pick per dilemma
     entry.picked = side;
     applyPickedState(entry, document.getElementById('optA'), document.getElementById('optB'));
+
+    const el = THEME_ELEMENT[entry.theme.id];
+    elementScore[el]++;
+    totalPicks++;
+    updateElementReveal();
+  }
+
+  function updateElementReveal(){
+    if(totalPicks < REVEAL_THRESHOLD){
+      elementReveal.classList.remove('show');
+      return;
+    }
+    let topKey = 'fire';
+    Object.keys(elementScore).forEach(k=>{
+      if(elementScore[k] > elementScore[topKey]) topKey = k;
+    });
+    const top = ELEMENTS[topKey];
+    const bars = Object.keys(ELEMENTS).map(k=>`${ELEMENTS[k].emoji}${elementScore[k]}`).join('  ');
+    elementReveal.innerHTML = `
+      <div class="er-title">${top.emoji} You pick like a ${top.label} soul</div>
+      <div class="er-blurb">${top.blurb}<br>(just for fun — not real astrology)</div>
+      <div class="er-bars">${bars}</div>
+    `;
+    elementReveal.classList.add('show');
   }
 
   function cap(s){
