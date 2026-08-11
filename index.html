@@ -332,6 +332,12 @@
     font-size:.78rem;
     color:var(--muted);
   }
+  .element-reveal .er-next{
+    margin-top:8px;
+    font-size:.7rem;
+    color:var(--accent);
+    opacity:.85;
+  }
 
   footer{
     margin-top:16px;
@@ -1695,13 +1701,37 @@
   let chosenVoiceName = localStorage.getItem('wyr-voice') || '';
 
   // Just-for-fun flavor text, not a real astrological reading — each theme
-  // leans toward one of the four classical elements, and your picks tally
-  // up into a lighthearted "element" reveal once you've made a few.
-  const THEME_ELEMENT = {
-    powers:'fire', fantasy:'fire', transport:'fire', jobs:'fire',
-    kitchen:'earth', animals:'earth', senses:'earth', objects:'earth',
-    weather:'air', space:'air', time:'air', music:'air',
-    emotions:'water', seasons:'water', size:'water',
+  // leans toward one of the 12 zodiac signs (element + modality), and your
+  // picks tally up into a lighthearted reveal once you've made a few. Below
+  // SIGN_THRESHOLD picks you get the simpler 4-element version instead —
+  // full sign coverage needs more data before 12 buckets feel meaningful.
+  const THEME_SIGN = {
+    powers:'aries', jobs:'aries',
+    fantasy:'leo',
+    transport:'sagittarius',
+    kitchen:'taurus', senses:'taurus',
+    objects:'capricorn',
+    animals:'virgo',
+    weather:'libra', time:'libra',
+    space:'aquarius',
+    music:'gemini',
+    emotions:'cancer',
+    size:'scorpio',
+    seasons:'pisces',
+  };
+  const SIGNS = {
+    aries:{ emoji:'♈', label:'Aries', element:'fire', blurb:'First to leap, first to choose — no hesitation.' },
+    taurus:{ emoji:'♉', label:'Taurus', element:'earth', blurb:'Steady and sensory, drawn to comfort and good taste.' },
+    gemini:{ emoji:'♊', label:'Gemini', element:'air', blurb:'Quick and curious — torn between two good options and loving it.' },
+    cancer:{ emoji:'♋', label:'Cancer', element:'water', blurb:'Led by feeling, drawn to the warm and familiar choice.' },
+    leo:{ emoji:'♌', label:'Leo', element:'fire', blurb:'Drawn to the bold, the dramatic, the memorable option.' },
+    virgo:{ emoji:'♍', label:'Virgo', element:'earth', blurb:'Notices the small details everyone else missed.' },
+    libra:{ emoji:'♎', label:'Libra', element:'air', blurb:'Weighs both sides carefully before tipping the scale.' },
+    scorpio:{ emoji:'♏', label:'Scorpio', element:'water', blurb:'Drawn to the intense, the deep, the a-little-too-much option.' },
+    sagittarius:{ emoji:'♐', label:'Sagittarius', element:'fire', blurb:'Always eyeing the option that goes somewhere new.' },
+    capricorn:{ emoji:'♑', label:'Capricorn', element:'earth', blurb:'Picks the option built to last.' },
+    aquarius:{ emoji:'♒', label:'Aquarius', element:'air', blurb:'Drawn to the strange, the sky-bound, the unconventional pick.' },
+    pisces:{ emoji:'♓', label:'Pisces', element:'water', blurb:'Follows the dreamier, more wistful option.' },
   };
   const ELEMENTS = {
     fire:{ emoji:'🔥', label:'Fire', blurb:'Bold and quick to leap — you go for the dramatic choice.' },
@@ -1710,9 +1740,19 @@
     water:{ emoji:'🌊', label:'Water', blurb:'Intuitive and feeling-first — you follow the mood of a choice.' },
   };
   const REVEAL_THRESHOLD = 5;
-  const elementScore = { fire:0, earth:0, air:0, water:0 };
+  const SIGN_THRESHOLD = 20;
+  const signScore = {};
+  Object.keys(SIGNS).forEach(k=>{ signScore[k] = 0; });
   let totalPicks = 0;
   const elementReveal = document.getElementById('elementReveal');
+
+  function computeElementScores(){
+    const scores = { fire:0, earth:0, air:0, water:0 };
+    Object.keys(signScore).forEach(sk=>{
+      scores[SIGNS[sk].element] += signScore[sk];
+    });
+    return scores;
+  }
 
   // Every item shown this session, in EITHER field A or field B (cleared on
   // page reload) — an item counts as used no matter which side it appeared
@@ -1814,8 +1854,8 @@
     entry.picked = side;
     applyPickedState(entry, document.getElementById('optA'), document.getElementById('optB'));
 
-    const el = THEME_ELEMENT[entry.theme.id];
-    elementScore[el]++;
+    const sign = THEME_SIGN[entry.theme.id];
+    signScore[sign]++;
     totalPicks++;
     updateElementReveal();
   }
@@ -1825,17 +1865,39 @@
       elementReveal.classList.remove('show');
       return;
     }
-    let topKey = 'fire';
-    Object.keys(elementScore).forEach(k=>{
-      if(elementScore[k] > elementScore[topKey]) topKey = k;
-    });
-    const top = ELEMENTS[topKey];
-    const bars = Object.keys(ELEMENTS).map(k=>`${ELEMENTS[k].emoji}${elementScore[k]}`).join('  ');
-    elementReveal.innerHTML = `
-      <div class="er-title">${top.emoji} You pick like a ${top.label} soul</div>
-      <div class="er-blurb">${top.blurb}<br>(just for fun — not real astrology)</div>
-      <div class="er-bars">${bars}</div>
-    `;
+
+    if(totalPicks < SIGN_THRESHOLD){
+      const scores = computeElementScores();
+      let topKey = 'fire';
+      Object.keys(scores).forEach(k=>{
+        if(scores[k] > scores[topKey]) topKey = k;
+      });
+      const top = ELEMENTS[topKey];
+      const bars = Object.keys(ELEMENTS).map(k=>`${ELEMENTS[k].emoji}${scores[k]}`).join('  ');
+      const toGo = SIGN_THRESHOLD - totalPicks;
+      elementReveal.innerHTML = `
+        <div class="er-title">${top.emoji} You pick like a ${top.label} soul</div>
+        <div class="er-blurb">${top.blurb}<br>(just for fun — not real astrology)</div>
+        <div class="er-bars">${bars}</div>
+        <div class="er-next">${toGo} more pick${toGo===1?'':'s'} to unlock your full sign</div>
+      `;
+    } else {
+      let topKey = Object.keys(signScore)[0];
+      Object.keys(signScore).forEach(k=>{
+        if(signScore[k] > signScore[topKey]) topKey = k;
+      });
+      const top = SIGNS[topKey];
+      const ranked = Object.keys(signScore)
+        .filter(k=>signScore[k]>0)
+        .sort((a,b)=>signScore[b]-signScore[a])
+        .slice(0,4);
+      const bars = ranked.map(k=>`${SIGNS[k].emoji}${signScore[k]}`).join('  ');
+      elementReveal.innerHTML = `
+        <div class="er-title">${top.emoji} You're giving ${top.label}</div>
+        <div class="er-blurb">${top.blurb}<br>(just for fun — not real astrology)</div>
+        <div class="er-bars">${bars}</div>
+      `;
+    }
     elementReveal.classList.add('show');
   }
 
