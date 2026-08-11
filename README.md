@@ -18,7 +18,17 @@ back exactly twelve seconds."*
 
 ## Run it
 
-It's a static page — just open `index.html` in a browser, or host it on
-GitHub Pages (Settings → Pages → Deploy from branch → `main` / root).
+It's a static page — just open `index.html` in a browser, or serve it locally:
 
-Once Pages is on, it's live at `https://<your-username>.github.io/would-you-rather/`.
+```sh
+python3 -m http.server 8000
+# then visit http://localhost:8000
+```
+
+## Deploying with GitHub Pages
+
+This repo ships a GitHub Actions workflow (`.github/workflows/pages.yml`) that
+deploys the site on every push to `main`. Set **Settings → Pages → Build and
+deployment → Source** to **GitHub Actions** (one time, or it self-enables on
+first deploy). Once deployed, it's live at
+`https://<your-username>.github.io/would-you-rather/`.
