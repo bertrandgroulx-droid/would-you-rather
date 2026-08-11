@@ -327,10 +327,30 @@
   .element-reveal .er-bars{
     display:flex;
     justify-content:center;
-    gap:10px;
+    flex-wrap:wrap;
+    gap:4px;
     margin-top:8px;
     font-size:.78rem;
     color:var(--muted);
+  }
+  .element-reveal .er-bar-item{
+    cursor:pointer;
+    padding:3px 7px;
+    border-radius:8px;
+    transition:background .15s ease;
+  }
+  .element-reveal .er-bar-item:hover,
+  .element-reveal .er-bar-item:focus-visible,
+  .element-reveal .er-bar-item:active{
+    background:rgba(255,180,84,.16);
+    outline:none;
+  }
+  .element-reveal .er-bar-label{
+    margin-top:6px;
+    min-height:1.1em;
+    font-size:.68rem;
+    color:var(--accent);
+    opacity:.85;
   }
   .element-reveal .er-next{
     margin-top:8px;
@@ -1887,12 +1907,13 @@
         if(scores[k] > scores[topKey]) topKey = k;
       });
       const top = ELEMENTS[topKey];
-      const bars = Object.keys(ELEMENTS).map(k=>`${ELEMENTS[k].emoji}${scores[k]}`).join('  ');
+      const bars = Object.keys(ELEMENTS).map(k=>barItem(ELEMENTS[k].emoji, ELEMENTS[k].label, scores[k])).join('');
       const toGo = SIGN_THRESHOLD - totalPicks;
       elementReveal.innerHTML = `
         <div class="er-title">${top.emoji} You pick like a ${top.label} soul</div>
         <div class="er-blurb">${top.blurb}<br>(just for fun — not real astrology)</div>
         <div class="er-bars">${bars}</div>
+        <div class="er-bar-label" id="erBarLabel">tap a symbol to see what it means</div>
         <div class="er-next">${toGo} more pick${toGo===1?'':'s'} to unlock your full sign</div>
       `;
     } else {
@@ -1905,14 +1926,35 @@
         .filter(k=>signScore[k]>0)
         .sort((a,b)=>signScore[b]-signScore[a])
         .slice(0,4);
-      const bars = ranked.map(k=>`${SIGNS[k].emoji}${signScore[k]}`).join('  ');
+      const bars = ranked.map(k=>barItem(SIGNS[k].emoji, SIGNS[k].label, signScore[k])).join('');
       elementReveal.innerHTML = `
         <div class="er-title">${top.emoji} You're giving ${top.label}</div>
         <div class="er-blurb">${top.blurb}<br>(just for fun — not real astrology)</div>
         <div class="er-bars">${bars}</div>
+        <div class="er-bar-label" id="erBarLabel">tap a symbol to see what it means</div>
       `;
     }
     elementReveal.classList.add('show');
+  }
+
+  function barItem(emoji, name, count){
+    return `<span class="er-bar-item" tabindex="0" role="button" title="${name}" data-name="${name}" data-emoji="${emoji}">${emoji}${count}</span>`;
+  }
+
+  elementReveal.addEventListener('click', onBarItemActivate);
+  elementReveal.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter' || e.key===' ') onBarItemActivate(e);
+  });
+
+  function onBarItemActivate(e){
+    const item = e.target.closest('.er-bar-item');
+    if(!item) return;
+    e.preventDefault();
+    const label = document.getElementById('erBarLabel');
+    if(!label) return;
+    label.textContent = `${item.dataset.emoji} = ${item.dataset.name}`;
+    clearTimeout(onBarItemActivate._t);
+    onBarItemActivate._t = setTimeout(()=>{ label.textContent = 'tap a symbol to see what it means'; }, 2800);
   }
 
   function cap(s){
