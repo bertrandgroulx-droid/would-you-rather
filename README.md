@@ -12,8 +12,6 @@ back exactly twelve seconds."*
 - 🎲 **One-click dilemmas** — a big built-in pool (~1,200+ pairings), with
   **no repeats within a session**.
 - 🐉 **Whimsical dark wizard/dragon theme.**
-- 🔊 **Read-aloud** — reads the dilemma using your device's speech synthesis,
-  with a voice picker.
 - 📱 **Self-contained** — a single `index.html`, no build step, no dependencies.
 
 ## Run it
