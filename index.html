@@ -8,6 +8,21 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+<!-- This app lives at shozbot.com/would-you-rather/ now. The canonical link
+     names that address from either one; the script sends anyone still on the
+     old github.io link across, keeping their query and hash.
+
+     The hostname test is load-bearing. shozbot.com serves this very file
+     through a Vercel rewrite, so without the test the redirect would fire at
+     shozbot.com too and loop the browser for ever. -->
+<link rel="canonical" href="https://shozbot.com/would-you-rather/">
+<script>
+  (function () {
+    if (location.hostname !== "bertrandgroulx-droid.github.io") return;
+    location.replace("https://shozbot.com/would-you-rather/" + location.search + location.hash);
+  })();
+</script>
 <style>
   :root{
     --bg1:#0b0416;
@@ -2092,5 +2107,11 @@
 
 })();
 </script>
+<!-- The shared studio kit: the "by shozbot" credit under the tagline, and
+     visitor counting. One line here rather than a snippet in every app, so
+     both change in one place. See shozbot.com/kit/kit.js. -->
+<script src="https://shozbot.com/kit/kit.js"
+        data-by="header .tagline" data-by-block defer></script>
+
 </body>
 </html>
